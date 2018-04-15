@@ -63,6 +63,42 @@ final class Contact
     */
     public $email = null;
 
+    private $emails = [];
+
+    private $phoneNumbers = [];
+
+    public function addEmail($email)
+    {
+        if (in_array($email, $this->emails)) {
+            return;
+        }
+
+        $this->emails[] = $email;
+
+        if (!$this->email) {
+            $this->email = $email;
+        }
+    }
+
+    public function getEmails()
+    {
+        if ($this->email && !in_array($this->email, $this->emails)) {
+            $this->emails[] = $this->email;
+        }
+
+        return $this->emails;
+    }
+
+    public function addPhoneNumber($phoneNumber)
+    {
+        $this->phoneNumbers[] = $phoneNumber;
+    }
+
+    public function getPhoneNumbers()
+    {
+        return $this->phoneNumbers;
+    }
+
     /**
     * Prevent the providers adapters from adding new fields.
     *

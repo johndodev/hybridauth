@@ -20,12 +20,12 @@ class Instagram extends OAuth2
     /**
      * {@inheritdoc}
      */
-    protected $scope = 'basic';
+    protected $scope = 'follower_list';
 
     /**
      * {@inheritdoc}
      */
-    protected $apiBaseUrl = 'https://api.instagram.com/v1/';
+    protected $apiBaseUrl = 'https://graph.facebook.com/v2.8/';
 
     /**
      * {@inheritdoc}
@@ -82,5 +82,60 @@ class Instagram extends OAuth2
         $userProfile->data = (array) $data->get('counts');
 
         return $userProfile;
+    }
+
+    public function getUserContacts()
+    {
+        $contacts = [];
+
+        $apiUrl = 'users/self/follows';
+
+        do {
+            $response = $this->apiRequest($apiUrl);
+var_dump($response);die;
+            $data = new Data\Collection($response);
+
+            if (! $data->exists('data')) {
+                throw new UnexpectedApiResponseException('Provider API returned an unexpected response.');
+            }
+
+            if ($data->filter('data')->isEmpty()) {
+                continue;
+            }
+
+            foreach ($data->filter('data')->toArray() as $item) {
+                $contacts[] = $this->fetchUserContact($item);
+            }
+
+            if ($data->filter('paging')->exists('next')) {
+                $apiUrl = $data->filter('paging')->get('next');
+
+                $pagedList = true;
+            } else {
+                $pagedList = false;
+            }
+        } while ($pagedList);
+
+        return $contacts;
+    }
+
+    /**
+     * Parse the user contact.
+     *
+     * @param array $item
+     *
+     * @return \Hybridauth\User\Contact
+     */
+    protected function fetchUserContact($item)
+    {
+        $userContact = new User\Contact();
+var_dump($item);die;
+        $item = new Data\Collection($item);
+
+        $userContact->identifier  = $item->get('id');
+        $userContact->displayName = $item->get('full_name');
+        $userContact->photoURL = $item->get('profile_picture');
+
+        return $userContact;
     }
 }
